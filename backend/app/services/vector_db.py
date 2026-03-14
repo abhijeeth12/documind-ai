@@ -1,5 +1,5 @@
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams
+from qdrant_client.models import Distance, VectorParams, PointStruct
 
 client = QdrantClient(":memory:")
 
@@ -21,22 +21,25 @@ def init_collection():
 
 
 def add_document(doc_id, embedding, payload):
+
+    point = PointStruct(
+        id=doc_id,
+        vector=embedding,
+        payload=payload
+    )
+
     client.upsert(
         collection_name=COLLECTION_NAME,
-        points=[
-            {
-                "id": doc_id,
-                "vector": embedding,
-                "payload": payload,
-            }
-        ],
+        points=[point]
     )
 
 
 def search(query_vector):
-    results = client.search(
+
+    results = client.query_points(
         collection_name=COLLECTION_NAME,
-        query_vector=query_vector,
+        query=query_vector,
         limit=5
     )
-    return results
+
+    return results.points
